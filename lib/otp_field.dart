@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:otp_text_field/otp_field_style.dart';
@@ -186,7 +188,7 @@ class _OTPTextFieldState extends State<OTPTextField> {
         textAlign: TextAlign.center,
         style: widget.style,
         inputFormatters: widget.inputFormatter,
-        maxLength: 1,
+        // maxLength: 1,
         focusNode: _focusNodes[index],
         obscureText: widget.obscureText,
         decoration: InputDecoration(
@@ -207,7 +209,7 @@ class _OTPTextFieldState extends State<OTPTextField> {
         ),
         onChanged: (String str) {
           if (str.length > 1) {
-            _handlePaste(str);
+            _handlePaste(str, index);
             return;
           }
 
@@ -268,18 +270,29 @@ class _OTPTextFieldState extends State<OTPTextField> {
     return currentPin;
   }
 
-  void _handlePaste(String str) {
+  void _handlePaste(String str, int index) {
     if (str.length > widget.length) {
       str = str.substring(0, widget.length);
     }
 
-    for (int i = 0; i < str.length; i++) {
-      String digit = str.substring(i, i + 1);
-      _textControllers[i]!.text = digit;
-      _pin[i] = digit;
+    if (str.length < widget.length) {
+      for (int i = 0; i < str.length; i++) {
+        String digit = str.substring(i, i + 1);
+        final itemIndex = index + i;
+        if (itemIndex < widget.length) {
+          _textControllers[itemIndex]!.text = digit;
+          _pin[itemIndex] = digit;
+          FocusScope.of(context).requestFocus(_focusNodes[itemIndex]);
+        }
+      }
+    } else {
+      for (int i = 0; i < str.length; i++) {
+        String digit = str.substring(i, i + 1);
+        _textControllers[i]!.text = digit;
+        _pin[i] = digit;
+      }
+      FocusScope.of(context).requestFocus(_focusNodes[widget.length - 1]);
     }
-
-    FocusScope.of(context).requestFocus(_focusNodes[widget.length - 1]);
 
     String currentPin = _getCurrentPin();
 
