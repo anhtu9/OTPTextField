@@ -99,6 +99,7 @@ class _OTPTextFieldState extends State<OTPTextField> {
   late List<TextEditingController?> _textControllers;
 
   late List<String> _pin;
+  final dummyChar = '\u200B';
 
   @override
   void initState() {
@@ -158,7 +159,7 @@ class _OTPTextFieldState extends State<OTPTextField> {
       focusNode?.addListener((() => handleFocusChange(index)));
     }
     if (textEditingController == null) {
-      _textControllers[index] = TextEditingController();
+      _textControllers[index] = TextEditingController(text: dummyChar);
       textEditingController = _textControllers[index];
     }
 
@@ -208,14 +209,34 @@ class _OTPTextFieldState extends State<OTPTextField> {
           errorStyle: const TextStyle(height: 0, fontSize: 0),
         ),
         onChanged: (String str) {
-          if (str.length > 1) {
-            _handlePaste(str, index);
+          if (str.isEmpty || str.length == 1) {
+            int focusPos = max(index - 1, 0);
+            _textControllers[index]?.value = TextEditingValue(
+              text: dummyChar,
+              selection: const TextSelection.collapsed(offset: 1),
+            );
+            if (index == 0) return;
+            _focusNodes[focusPos]!.requestFocus();
+            return;
+          }
+          var inputValue = str.substring(1);
+
+          if (inputValue.length > 2) {
+            _handlePaste(inputValue, index);
+            return;
+          }
+          if (inputValue.length > 1) {
+            inputValue = inputValue[inputValue.length - 1];
+          }
+
+          if (inputValue.length > 2) {
+            _handlePaste(inputValue, index);
             return;
           }
 
           // Check if the current value at this position is empty
           // If it is move focus to previous text field.
-          if (str.isEmpty) {
+          if (inputValue.isEmpty) {
             if (index == 0) return;
             _focusNodes[index]!.unfocus();
             _focusNodes[index - 1]!.requestFocus();
@@ -223,13 +244,17 @@ class _OTPTextFieldState extends State<OTPTextField> {
 
           // Update the current pin
           setState(() {
-            _pin[index] = str;
+            _pin[index] = inputValue;
+            _textControllers[index]?.value = TextEditingValue(
+              text: dummyChar + inputValue,
+              selection: const TextSelection.collapsed(offset: 2),
+            );
           });
 
           // Remove focus
-          if (str.isNotEmpty) _focusNodes[index]!.unfocus();
+          if (inputValue.isNotEmpty) _focusNodes[index]!.unfocus();
           // Set focus to the next field if available
-          if (index + 1 != widget.length && str.isNotEmpty) {
+          if (index + 1 != widget.length && inputValue.isNotEmpty) {
             FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
           }
 
@@ -280,7 +305,10 @@ class _OTPTextFieldState extends State<OTPTextField> {
         String digit = str.substring(i, i + 1);
         final itemIndex = index + i;
         if (itemIndex < widget.length) {
-          _textControllers[itemIndex]!.text = digit;
+          _textControllers[itemIndex]!.value = TextEditingValue(
+            text: dummyChar + digit,
+            selection: const TextSelection.collapsed(offset: 2),
+          );
           _pin[itemIndex] = digit;
           FocusScope.of(context).requestFocus(_focusNodes[itemIndex]);
         }
@@ -288,7 +316,11 @@ class _OTPTextFieldState extends State<OTPTextField> {
     } else {
       for (int i = 0; i < str.length; i++) {
         String digit = str.substring(i, i + 1);
-        _textControllers[i]!.text = digit;
+        _textControllers[i]!
+          ..value = TextEditingValue(
+            text: dummyChar + digit,
+            selection: const TextSelection.collapsed(offset: 2),
+          );
         _pin[i] = digit;
       }
       FocusScope.of(context).requestFocus(_focusNodes[widget.length - 1]);
