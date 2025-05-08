@@ -215,6 +215,7 @@ class _OTPTextFieldState extends State<OTPTextField> {
               text: dummyChar,
               selection: const TextSelection.collapsed(offset: 1),
             );
+            _pin[index] = '';
             if (index == 0) return;
             _focusNodes[focusPos]!.requestFocus();
             return;
