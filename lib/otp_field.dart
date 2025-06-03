@@ -216,6 +216,7 @@ class _OTPTextFieldState extends State<OTPTextField> {
               selection: const TextSelection.collapsed(offset: 1),
             );
             _pin[index] = '';
+            _checkOnChangepin();
             if (index == 0) return;
             _focusNodes[focusPos]!.requestFocus();
             return;
@@ -259,21 +260,25 @@ class _OTPTextFieldState extends State<OTPTextField> {
             FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
           }
 
-          String currentPin = _getCurrentPin();
-
-          // if there are no null values that means otp is completed
-          // Call the `onCompleted` callback function provided
-          if (!_pin.contains(null) &&
-              !_pin.contains('') &&
-              currentPin.length == widget.length) {
-            widget.onCompleted?.call(currentPin);
-          }
-
-          // Call the `onChanged` callback function
-          widget.onChanged!(currentPin);
+          _checkOnChangepin();
         },
       ),
     );
+  }
+
+  void _checkOnChangepin() {
+    String currentPin = _getCurrentPin();
+
+    // if there are no null values that means otp is completed
+    // Call the `onCompleted` callback function provided
+    if (!_pin.contains(null) &&
+        !_pin.contains('') &&
+        currentPin.length == widget.length) {
+      widget.onCompleted?.call(currentPin);
+    }
+
+    // Call the `onChanged` callback function
+    widget.onChanged!(currentPin);
   }
 
   void handleFocusChange(int index) {
@@ -327,18 +332,7 @@ class _OTPTextFieldState extends State<OTPTextField> {
       FocusScope.of(context).requestFocus(_focusNodes[widget.length - 1]);
     }
 
-    String currentPin = _getCurrentPin();
-
-    // if there are no null values that means otp is completed
-    // Call the `onCompleted` callback function provided
-    if (!_pin.contains(null) &&
-        !_pin.contains('') &&
-        currentPin.length == widget.length) {
-      widget.onCompleted?.call(currentPin);
-    }
-
-    // Call the `onChanged` callback function
-    widget.onChanged!(currentPin);
+    _checkOnChangepin();
   }
 }
 
